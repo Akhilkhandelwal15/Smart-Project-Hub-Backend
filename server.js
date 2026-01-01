@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes.js';
+import projectRoutes from './routes/projectRoute.js';
 
 const app = express();
 const PORT = 3000;
@@ -24,6 +25,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // routes
 app.use('/api/auth', authRoutes);
+app.use('/api/project', projectRoutes);
 app.get('/', (req, res)=>{
   res.send('Server is running.');
 });
