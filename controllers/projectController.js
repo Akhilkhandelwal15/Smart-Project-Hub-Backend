@@ -29,7 +29,7 @@ export const createProject = async(req, res)=>{
 // get user projects
 export const getProjects = async(req, res)=>{
   try{
-    const projects = Project.find({
+    const projects = await Project.find({
       deletedAt: null,
       $or:[
         {owner: req.user._id},
@@ -96,21 +96,19 @@ export const updateProject = async(req, res)=>{
 }
 
 // Soft delete project
-export const archiveProject = async(req, res)=>{
+export const deleteProject = async(req, res)=>{
   const projectId = req.params.projectId;
   try{
-    const project = await Project.findByIdAndDelete(
-      projectId,
-      {
-        deletedAt: new Date(),
-        status: "archived"
-      },
-      {new: true}
-    );
+    const project = await Project.findById(projectId);
 
-    if(!project){
+    if(!project || project.deletedAt){
       return res.status(404).json({ success: false, message: "Project not found" });
     }
+
+    project.deletedAt = new Date();
+    project.status = 'archive';
+
+    await project.save();
 
     res.status(200).json({success: true, message:"Project successfully deleted.", project});
   }

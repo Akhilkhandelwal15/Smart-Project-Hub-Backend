@@ -5,6 +5,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes.js';
 import projectRoutes from './routes/projectRoute.js';
+import taskRoutes from './routes/taskRoutes.js';
 
 const app = express();
 const PORT = 3000;
@@ -26,6 +27,7 @@ mongoose.connect(process.env.MONGO_URI)
 // routes
 app.use('/api/auth', authRoutes);
 app.use('/api/project', projectRoutes);
+app.use('/api/task', taskRoutes);
 app.get('/', (req, res)=>{
   res.send('Server is running.');
 });
