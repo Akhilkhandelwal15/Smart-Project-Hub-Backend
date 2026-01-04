@@ -3,12 +3,13 @@ import Project from "../models/Project.js";
 // create project
 export const createProject = async(req, res)=>{
   const {name, description, visibility, tags} = req.body;
+  const tagsArray = tags.trim()!="" ? tags.split(',').map(tag => tag.trim()) : [];
   try{
      const project = await Project.create({
       name, 
       description, 
       visibility, 
-      tags,
+      tags: tagsArray,
       owner: req.user._id,
       members: [
         {

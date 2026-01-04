@@ -59,7 +59,7 @@ export const login = async(req, res)=>{
     });
   }
   catch(error){
-    console.log(error);
+    console.log('error login:', error);
     res.status(500).json({success: false, message:'Unexpected Server error'});
   }
 }
