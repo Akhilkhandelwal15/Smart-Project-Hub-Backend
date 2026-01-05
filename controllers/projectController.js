@@ -69,24 +69,42 @@ export const getProjectById = async(req, res)=>{
 
 // update project
 export const updateProject = async(req, res)=>{
-  const projectId = req.params.projectId
-  const {name, description, status, visibility, tags} = req.body;
+  const projectId = req.params.projectId;
+  console.log(req.body);
+  const {name, description, status, visibility, tags, members = [], managers = [], allowComments, allowAttachments} = req.body;
   try{
-    const project = await Project.findByIdAndUpdate(
-      projectId,
-      {
-        name,
-        description,
-        status,
-        visibility,
-        tags,
-      },
-      {new: true}
-    );
+    const project = await Project.findById(projectId);
 
-    if(!project){
+    if (!project) {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
+
+    const owner = project.members.find(m => m.role === "owner");
+
+    const updatedMembers = [
+      owner,
+      ...members.map(userId=>({
+        user: userId,
+        role: "member"
+      })),
+      ...managers.map(userId => ({
+        user: userId,
+        role: "manager",
+      })),
+    ]
+
+    project.name = name;
+    project.description = description;
+    project.visibility = visibility;
+    project.tags = tags.split(",").map(t => t.trim());
+    project.members = updatedMembers;
+    project.settings = {
+      allowComments,
+      allowAttachments,
+    };
+    project.status = status;
+
+    await project.save();
 
     return res.status(200).json({success: true, message:"Project updated successfully", project});
   }

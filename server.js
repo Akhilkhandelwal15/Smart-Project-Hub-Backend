@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes.js';
 import projectRoutes from './routes/projectRoute.js';
 import taskRoutes from './routes/taskRoutes.js';
+import userRoutes from './routes/userRoute.js';
 
 const app = express();
 const PORT = 3000;
@@ -28,7 +29,8 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/project', projectRoutes);
 app.use('/api/task', taskRoutes);
-app.get('/', (req, res)=>{
+app.use('/api/user', userRoutes);
+app.use('/', (req, res)=>{
   res.send('Server is running.');
 });
 
