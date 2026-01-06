@@ -125,7 +125,7 @@ export const deleteProject = async(req, res)=>{
     }
 
     project.deletedAt = new Date();
-    project.status = 'archive';
+    project.status = 'archived';
 
     await project.save();
 
