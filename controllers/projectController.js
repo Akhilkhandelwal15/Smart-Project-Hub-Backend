@@ -136,3 +136,9 @@ export const deleteProject = async(req, res)=>{
     res.status(500).json({success: false, message:'Internal server error'});
   }
 }
+
+export const getProjectPermissions = async(req, res)=>{
+  const projectRole = req.projectRole;
+  const permissions = req.getProjectPermissions;
+  res.status(200).json({role: projectRole, permissions});
+}

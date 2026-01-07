@@ -1,9 +1,68 @@
+// import Project from "../models/Project.js";
+
+import { PROJECT_PERMISSIONS } from "../config/projectPermissions.js";
 import Project from "../models/Project.js";
+
+// export const isProjectMember = async(req, res, next)=>{
+//   const projectId = req.params.projectId;
+//   const userId = req.user._id;
+
+//   try{
+//     const project = await Project.findById(projectId);
+
+//     if(!project || project.deletedAt){
+//       return res.status(404).json({success: false, message:"Project not found"});
+//     }
+
+//     const isMember = project.owner.toString() === userId.toString() || 
+//       project.members.some((item)=> item.user.toString() === userId.toString());
+
+//     if(!isMember){
+//       return res.status(403).json({success: false, message:"Access denied"});
+//     }
+
+//     req.project = project;
+//     next();
+//   }
+//   catch(error){
+//     console.log("error:", error);
+//     res.status(500).json({success: false, message: "Internal server error"});
+//   }
+// }
+
+// export const isProjectOwnerOrManager = async(req, res, next)=>{
+//   const projectId = req.params.projectId;
+//   const userId = req.user._id;
+  
+//   try{
+//     const project = await Project.findById(projectId);
+
+//     if(!project || project.deletedAt){
+//       return res.status(404).json({success: false, message:"Project not found"});
+//     }
+
+//     const isOwnerOrManager = project.owner.toString() === userId.toString() || 
+//       project.members.some((item)=> item.user.toString() === userId.toString() && item.role==="manager");
+
+//     if(!isOwnerOrManager){
+//       return res.status(403).json({success: false, message:"Access denied"});
+//     }
+
+//     req.project = project;
+//     next();
+//   }
+//   catch(error){
+//     console.log("error:", error);
+//     res.status(500).json({success: false, message: "Internal server error"});
+//   }
+// }
+
 
 export const isProjectMember = async(req, res, next)=>{
   const projectId = req.params.projectId;
   const userId = req.user._id;
-
+  console.log("projectId:", projectId);
+  console.log("userId", userId);
   try{
     const project = await Project.findById(projectId);
 
@@ -11,45 +70,47 @@ export const isProjectMember = async(req, res, next)=>{
       return res.status(404).json({success: false, message:"Project not found"});
     }
 
-    const isMember = project.owner.toString() === userId.toString() || 
-      project.members.some((item)=> item.user.toString() === userId.toString());
+    const member = project.members.find((m)=> m.user.toString() === userId.toString());
 
-    if(!isMember){
-      return res.status(403).json({success: false, message:"Access denied"});
+    if(!member){
+      return res.status(403).json({success: false, message:"Not a project member"});
     }
 
     req.project = project;
+    req.projectRole = member.role;
     next();
   }
   catch(error){
-    console.log("error:", error);
-    res.status(500).json({success: false, message: "Internal server error"});
+    console.log("Error in project middleware:", error);
+    res.status(500).json({success: false, message:"Internal server error"});
   }
 }
 
-export const isProjectOwnerOrManager = async(req, res, next)=>{
-  const projectId = req.params.projectId;
-  const userId = req.user._id;
-  
+export const resolveProjectPermissions = (req, res, next)=>{
   try{
-    const project = await Project.findById(projectId);
+    const role = req.projectRole;
+    const permissions = PROJECT_PERMISSIONS[role];
 
-    if(!project || project.deletedAt){
-      return res.status(404).json({success: false, message:"Project not found"});
+    if(!permissions){
+      return res.status(403).json({success: false, message:"Invalid project role"});
     }
 
-    const isOwnerOrManager = project.owner.toString() === userId.toString() || 
-      project.members.some((item)=> item.user.toString() === userId.toString() && item.role==="manager");
-
-    if(!isOwnerOrManager){
-      return res.status(403).json({success: false, message:"Access denied"});
-    }
-
-    req.project = project;
+    req.projectPermissions = permissions;
     next();
   }
   catch(error){
-    console.log("error:", error);
-    res.status(500).json({success: false, message: "Internal server error"});
+    console.log("Error in resolveProjectPermissions middleware:", error);
+    res.status(500).json({success: false, message:"Internal server error"});
+  }
+}
+
+
+export const requireProjectPermission = (permission)=>{
+  return (req, res, next)=>{
+    const projectPermissions = req.projectPermissions;
+    if(!projectPermissions?.[permission]){ //here kept permission inside the brackets because permission is dynamic.
+      return res.status(403).json({success: false, message:"Insufficient project permissions."});
+    }
+    next();
   }
 }
