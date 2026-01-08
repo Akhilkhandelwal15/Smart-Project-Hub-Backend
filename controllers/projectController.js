@@ -1,3 +1,4 @@
+import { PROJECT_PERMISSIONS } from "../config/projectPermissions.js";
 import Project from "../models/Project.js";
 
 // create project
@@ -29,6 +30,7 @@ export const createProject = async(req, res)=>{
 
 // get user projects
 export const getProjects = async(req, res)=>{
+  const userId = req.user._id;
   try{
     const projects = await Project.find({
       deletedAt: null,
@@ -36,7 +38,16 @@ export const getProjects = async(req, res)=>{
         {owner: req.user._id},
         {"members.user": req.user._id},
       ]
-    }).sort({createdAt: -1});
+    }).sort({createdAt: -1}).lean(); // lean() converts mongoose object to plain JS objects
+
+    projects.forEach((p)=>{
+      const member = p.members.find((m)=> m.user.toString() === userId.toString());
+      const role = member.role;
+      console.log("inside map:", member, role);
+      p.permissions = PROJECT_PERMISSIONS[role] || [];
+    });
+
+    console.log(projects);
 
     return res.status(200).json({success: true, projects}); // 200: resource successfully fetched (used when you retrieve or update a resource)
   }
